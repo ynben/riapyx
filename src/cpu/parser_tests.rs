@@ -1,38 +1,8 @@
 #[cfg(test)]
 mod tests
 {
-	use std::ops::Index;
-	use super::super::base::*;
 	use super::super::instruction::*;
 	use super::super::parser::*;
-
-	struct U16View<'a>
-	{
-		offset: usize,
-		data: &'a Index<usize, Output=u8>
-	}
-
-	impl<'a> U16View<'a>
-	{
-		fn new(offset: usize, data: &'a Index<usize, Output=u8>) -> U16View<'a>
-		{
-			U16View
-			{
-				offset: offset,
-				data: data
-			}
-		}
-	}
-
-	impl<'a> Index<u16> for U16View<'a>
-	{
-		type Output = u8;
-
-		fn index<'b> (&'b self, addr: u16) -> &'b u8
-		{
-			&(self.data[self.offset + (addr as usize)])
-		}
-	}
 
 	fn ins(size: u16, instruction: Instruction) -> SizedInstruction
 	{
@@ -137,7 +107,7 @@ mod tests
 
 		for (bytecode, expected_instruction) in test_cases
 		{
-			let instruction = parse_instruction(&U16View::new(0, &bytecode));
+			let instruction = parse_instruction(&bytecode);
 			assert_eq!(expected_instruction, instruction);
 		}
 	}
