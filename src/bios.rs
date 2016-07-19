@@ -6,20 +6,18 @@ use hw::display;
 
 use std::io::prelude::*;
 
-pub struct BdaEntry
+pub struct ByteBdaEntry
 {
 	idx: u8
 }
 
-impl BdaEntry
+impl ByteBdaEntry
 {
-	pub fn new(idx: u8) -> BdaEntry
-	{
-		BdaEntry
-		{
-			idx: idx
-		}
+	pub fn new(idx: u8) -> ByteBdaEntry
+	{ 
+		ByteBdaEntry { idx: idx } 
 	}
+	
 	pub fn get(&self, mem: &Memory) -> u8
 	{
 		mem.read_u8(0x400 + self.idx as u32)
@@ -28,6 +26,30 @@ impl BdaEntry
 	pub fn set(&self, mem: &mut Memory, val: u8)
 	{
 		mem.write_u8(0x400 + self.idx as u32, val)
+	}
+}
+
+pub struct WordBdaEntry
+{
+	idx: u8
+}
+
+impl WordBdaEntry
+{
+	pub fn new(idx: u8) -> WordBdaEntry
+	{ 
+		WordBdaEntry { idx: idx } 
+	}
+	
+	/*
+	pub fn get(&self, mem: &Memory) -> u16
+	{
+		mem.read_u16(0x400 + self.idx as u32)
+	}*/
+
+	pub fn set(&self, mem: &mut Memory, val: u16)
+	{
+		mem.write_u16(0x400 + self.idx as u32, val)
 	}
 }
 
@@ -111,7 +133,7 @@ impl BIOS
 					{
 						let mode = cpu.get_reg(BReg::AL);
 						bios_print!("Set video mode {}", mode);
-						hw.display.set_mode(display::GraphicMode::from_bios(mode))
+						hw.display.set_mode(mem, display::GraphicMode::from_bios(mode))
 					}
 					0x1 =>
 					{
@@ -574,6 +596,9 @@ impl BIOS
 		{
 			mem.write_u8(phys_addr(BIOS_SEGMENT, 0xfff0 + i as u16), far_jmp_7c00[i]);
 		}
+		
+		// Sets 80x25 display mode
+		hw.display.set_mode(mem, display::GraphicMode::T8025);
 
 		bios_print!("All done; now running the MBR")
 	}

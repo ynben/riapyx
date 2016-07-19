@@ -6,7 +6,7 @@ use std::collections::vec_deque::VecDeque;
 use super::scancodes::*;
 use super::super::cpu::CPU;
 use super::super::mem::Memory;
-use super::super::bios::BdaEntry;
+use super::super::bios::ByteBdaEntry;
 
 #[derive(Clone,Copy)]
 pub struct Keystroke
@@ -36,7 +36,7 @@ pub struct Keyboard
 	io_queue: VecDeque<u8>,
 	ppi_a: u8,
 	enable_irq: bool, // Disabled for BIOS wait_for_keystroke
-	shift_flags: BdaEntry
+	shift_flags: ByteBdaEntry
 }
 
 impl Keystroke
@@ -57,7 +57,7 @@ impl Keyboard
 			io_queue: VecDeque::<u8>::new(),
 			ppi_a: 0,
 			enable_irq: true,
-			shift_flags: BdaEntry::new(0x17)
+			shift_flags: ByteBdaEntry::new(0x17)
 		}
 	}
 

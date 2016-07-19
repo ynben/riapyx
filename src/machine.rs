@@ -78,7 +78,7 @@ impl Machine
 	{
 		self.cpu.dump();
 		let (cs, ip) = self.get_pc();
-		self.disas(cs, ip, 1);
+		self.disas(cs, ip, 3);
 	}
 
 	pub fn print_memory(&self, seg: u16, addr: u16, size: u32)
@@ -112,6 +112,26 @@ impl Machine
 				{ panic!("Unable to dump RAM; only wrote {} bytes", written) }
 			}
 			Err(e) => panic!("Unable to dump RAM; error {}", e)
+		}
+	}
+	
+	pub fn dump_segment_to_file(&self, seg: u32, fname: &str)
+	{
+		let mut file = File::create(fname).unwrap();
+		const SEG_SIZE: usize = 64 * 1024;
+		let mut buf = vec![0; SEG_SIZE as usize].into_boxed_slice();
+		for x in 0..SEG_SIZE
+		{
+			buf[x] = self.memory.read_u8((seg * 0x10) + x as u32);
+		}
+		match file.write(&buf)
+		{
+			Ok(written) =>
+			{
+				if written != SEG_SIZE
+				{ panic!("Unable to dump segment; only wrote {} bytes", written) }
+			}
+			Err(e) => panic!("Unable to dump segment; error {}", e)
 		}
 	}
 

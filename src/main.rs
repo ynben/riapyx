@@ -183,6 +183,18 @@ fn main()
 					_ => debug_print!("Usage: w [filename]")
 				}
 			}
+			Some("ws") =>
+			{
+				let args = (words.next(), words.next());
+				match args
+				{
+					(Some(seg), Some(fname)) =>
+					{
+						m.dump_segment_to_file(u32_from_hex_str(seg), fname);
+					},
+					_ => debug_print!("Usage: ws [seg] [filename]")
+				}
+			}
 			Some("c") | Some("t") =>
 			{
 				loop

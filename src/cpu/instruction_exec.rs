@@ -137,10 +137,10 @@ impl CPU
 
 	pub fn request_interrupt(&mut self, mem: &mut Memory, interrupt_number: u8)
 	{
-		if interrupt_number == 0x21 || interrupt_number == 0x29
+		/*if interrupt_number == 0x21 || interrupt_number == 0x29
 		{
-			//println!("DOS CALL; irq={:02x}, AX={:04x}", interrupt_number, self.ax);
-		}
+			println!("DOS CALL; irq={:02x}, AX={:04x}", interrupt_number, self.ax);
+		}*/
 
 		let flags = self.flags;
 		let ip = self.ip;

@@ -2,7 +2,8 @@ extern crate sdl2;
 
 use std::path::Path;
 use super::super::mem::Memory;
-use super::super::bios::BdaEntry;
+use super::super::bios::ByteBdaEntry;
+use super::super::bios::WordBdaEntry;
 
 // 60 FPS
 const SYNC_PERIOD_NS: u64 = 16666667;
@@ -42,7 +43,7 @@ pub enum GraphicMode // TODO: video mode?
 
 impl GraphicMode
 {
-	pub fn cols(&self) -> u32
+	pub fn cols(&self) -> u16
 	{
 		match *self
 		{
@@ -50,7 +51,7 @@ impl GraphicMode
 			GraphicMode::G640200 => 80
 		}
 	}
-	pub fn rows(&self) -> u32
+	pub fn rows(&self) -> u16
 	{
 		match *self
 		{
@@ -97,8 +98,8 @@ impl GraphicMode
 
 pub struct Cursor
 {
-	x: BdaEntry,
-	y: BdaEntry
+	x: ByteBdaEntry,
+	y: ByteBdaEntry
 }
 
 impl Cursor
@@ -107,8 +108,8 @@ impl Cursor
 	{
 		Cursor
 		{
-			x: BdaEntry::new(bda_idx),
-			y: BdaEntry::new(bda_idx + 1)
+			x: ByteBdaEntry::new(bda_idx),
+			y: ByteBdaEntry::new(bda_idx + 1)
 		}
 	}
 }
@@ -124,6 +125,7 @@ pub struct Display
 	font: sdl2::surface::Surface<'static>,
 	horrible_bw_surface_table: sdl2::surface::Surface<'static>,
 	cursors: [Cursor; 8],
+	num_cols: WordBdaEntry,
 	cur_page: u8,
 	last_sync_ns: u64,
 
@@ -162,6 +164,7 @@ impl Display
 			font: font,
 			horrible_bw_surface_table: horrible_bw_surface_table,
 			cursors: [cur(0x50), cur(0x52), cur(0x54), cur(0x56), cur(0x58), cur(0x5a), cur(0x5c), cur(0x5e)],
+			num_cols: WordBdaEntry::new(0x4a),
 			cur_page: 0, // TODO: should be BdaEntry
 			count_until_vram_used: VRAM_USED_INTERVAL,
 			last_sync_ns: 0
@@ -175,7 +178,7 @@ impl Display
 
 	fn chr_addr(&self, page: u8, x: u8, y: u8) -> u32
 	{
-		self.page_addr(page) + ((y as u32) * self.mode.cols() + (x as u32)) * 2
+		self.page_addr(page) + ((y as u32) * (self.mode.cols() as u32) + (x as u32)) * 2
 	}
 
 	fn cur_addr(&self, mem: &Memory, page: u8) -> u32
@@ -266,9 +269,10 @@ impl Display
 		self.window.update_surface().unwrap();
 	}
 
-	pub fn set_mode(&mut self, mode: GraphicMode)
+	pub fn set_mode(&mut self, mem: &mut Memory, mode: GraphicMode)
 	{
 		self.mode = mode;
+		self.num_cols.set(mem, mode.cols() as u16);
 	}
 
 	pub fn tty_scroll(&mut self, mem: &mut Memory, page: u8, x1: u8, y1: u8, x2_: u8, y2_: u8, attr: u8)
@@ -281,14 +285,14 @@ impl Display
 		{
 			for x in x1 .. (x2 + 1)
 			{
-				let new = mem.read_u16(topleft + ((y as u32 + 1) * self.mode.cols() + x as u32) * 2);
-				mem.write_u16(topleft + (y as u32 * self.mode.cols() + x as u32) * 2, new)
+				let new = mem.read_u16(topleft + ((y as u32 + 1) * (self.mode.cols() as u32) + x as u32) * 2);
+				mem.write_u16(topleft + (y as u32 * (self.mode.cols() as u32) + x as u32) * 2, new)
 			}
 		}
 
 		for x in x1 .. (x2 + 1)
 		{
-			mem.write_u16(topleft + (y2 as u32 * self.mode.cols() + x as u32) * 2, (attr as u16) << 8);
+			mem.write_u16(topleft + (y2 as u32 * (self.mode.cols() as u32) + x as u32) * 2, (attr as u16) << 8);
 		}
 	}
 
