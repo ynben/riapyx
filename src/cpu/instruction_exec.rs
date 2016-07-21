@@ -727,8 +727,18 @@ impl CPU
 			},
 			SingleOperandOpCode::POP =>
 			{
-				let val = self.stack_pop(mem);
-				self.store_operand(mem, &oper, val)
+				if oper == WOperand::SegReg(SegReg::CS)
+				{
+					println!("Error: POP CS instruction encountered.");
+					println!("Either the code is 8086-specific and really intends to this horrible thing, either you are running 186+ code.");
+					println!("Aborting before this gets ugly...");
+					self.state = CPUState::Crashed;
+				}
+				else
+				{
+					let val = self.stack_pop(mem);
+					self.store_operand(mem, &oper, val)
+				}
 			},
 			_ => self.run_sgop_ins(mem, op, &oper)
 		}
